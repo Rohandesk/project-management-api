@@ -79,4 +79,45 @@ export const UsersController = {
       console.log(error);
     }
   },
+
+  updateUsers: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const existing = await prisma.users.findUnique({
+        where: {
+          user_id: Number(req.params.id),
+        },
+      });
+      console.log(req.body, existing);
+      switch (true) {
+        case !existing:
+          res.status(404).json({ message: "User not found" });
+          break;
+        default:
+          const updateSchema = UserSchema.partial();
+          const validation = updateSchema.safeParse(req.body);
+          switch (true) {
+            case !validation.success:
+              console.log(validation);
+              res
+                .status(400)
+                .json({ message: validation.error.issues[0].message });
+              break;
+            default:
+              const updatedQuery = await prisma.users.update({
+                where: {
+                  user_id: Number(req.params.id),
+                },
+                data: req.body,
+              });
+              console.log(updatedQuery);
+              
+              res
+                .status(200)
+                .json({ message: "user data updated successfully" });
+          }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  },
 };
