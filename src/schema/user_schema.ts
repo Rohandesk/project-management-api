@@ -1,4 +1,4 @@
-import {zod} from zod;
+import {z} from "zod";
 
 export interface Users extends Document {
     user_name: string;
@@ -6,7 +6,9 @@ export interface Users extends Document {
 }
 
 // zod validation
-export const userSchema = zod.object({
-    user_name: zod.string().trim().min(1, "User name is required").max(50, "User name must be less than 50 characters"),
-    user_email: zod.string().trim().email('Invalid email format').toLowerCase(),
+export const UserSchema = z.object({
+    user_name: z.string().trim().min(1, "User name is required").max(50, "User name must be less than 50 characters"),
+    user_email: z.string().trim().min(1, "Email is required").email('Invalid email format').toLowerCase(),
 })
+
+export type CreateUserInput = z.infer<typeof UserSchema>;
