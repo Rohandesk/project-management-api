@@ -11,7 +11,6 @@ const prisma = new PrismaClient({ adapter });
 export const UsersController = {
   getUsers: async (req: Request, res: Response): Promise<void> => {
     try {
-      console.log("getUsers called");
       const getAllUsers = await prisma.users.findMany();
       res.status(200).json(getAllUsers);
     } catch (error) {
@@ -21,7 +20,6 @@ export const UsersController = {
 
   getParticularUser: async (req: Request, res: Response): Promise<void> => {
     try {
-      console.log(`getUsers called  ${req.params.id}`, typeof req.params.id);
       const conversion = Number(req.params.id);
       switch (true) {
         case isNaN(conversion):
@@ -55,7 +53,6 @@ export const UsersController = {
       const validation = UserSchema.safeParse(req.body);
       switch (true) {
         case !validation.success:
-          console.log("Validation failed", validation.error);
           res.status(400).json({ message: validation.error.issues[0].message });
           break;
         default:
@@ -64,7 +61,6 @@ export const UsersController = {
               user_email: req.body.user_email,
             },
           });
-          console.log("Existing user", existingUser);
           if (existingUser) {
             res.status(400).json({ message: "User already exists" });
           }
