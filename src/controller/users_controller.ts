@@ -32,7 +32,14 @@ export const UsersController = {
                             user_id: conversion
                         }
                     });
-                    res.status(200).json(getAllUsers);
+                    switch(true){
+                        case !getAllUsers:
+                            res.status(404).json({message:"User not found"});
+                            break;
+                        default:
+                            res.status(200).json(getAllUsers);
+                            break;
+                    }
             }
         } catch (error) {
             console.log(error);
