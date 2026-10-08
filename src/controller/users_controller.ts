@@ -154,5 +154,31 @@ export const UsersController = {
     } catch (error) {
       console.log("error comes here", error);
     }
+  },
+
+  deleteBulkUsers: async (req: Request, res: Response) : Promise<void> => {
+    try {
+      // filtering only ids here and removing invaid strings
+      const cleanIds = req.body.user_ids.filter((id: string) => Number(id));
+      switch(true){
+        case cleanIds.length == 0:
+          res.status(400).json({message: "No valid user ids provided"});
+          break;
+        default:
+          // cleanIds contains proper ids which are later converted into numbers stored in array and passed for deletion
+          const numConversion = cleanIds.map((id: string) => Number(id));
+          const deleteUsersIds = await prisma.users.deleteMany({
+            where: {
+              user_id: {
+                in: numConversion
+              }
+            }
+          })
+          res.status(200).json({ message: "Users deleted successfully"});
+          break;
+      }
+    } catch (error) {
+      console.log("error comes here", error);
+    }
   }
 };
