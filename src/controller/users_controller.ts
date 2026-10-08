@@ -124,4 +124,35 @@ export const UsersController = {
       console.log("error comes here", error);
     }
   },
+
+  deleteUser: async (req: Request, res: Response): Promise <void> => {
+    try {
+      const idConversion = Number(req.params.id);
+      switch(true){
+        case isNaN(idConversion):
+          res.status(400).json({message: "Invalid Id"});
+          break;
+        default:
+          const checkIdExist = await prisma.users.findUnique({
+            where: {
+              user_id: idConversion
+            }
+          })
+          switch(true){
+            case !checkIdExist:
+              res.status(404).json({message: "User not found"});
+              break;
+            default:
+              const deleteUser = await prisma.users.delete({
+                where: {
+                  user_id: idConversion,
+                }
+              })
+              res.status(200).json({message: "User deleted successfully"});
+          }
+      }
+    } catch (error) {
+      console.log("error comes here", error);
+    }
+  }
 };
