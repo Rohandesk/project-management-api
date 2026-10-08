@@ -62,7 +62,7 @@ export const UsersController = {
             },
           });
           if (existingUser) {
-            res.status(400).json({ message: "User already exists" });
+            res.status(400).json({ message: "User already exists with email" });
           }
           const newUser = await prisma.users.create({
             data: {
