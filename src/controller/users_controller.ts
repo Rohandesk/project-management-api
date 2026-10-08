@@ -62,7 +62,8 @@ export const UsersController = {
             },
           });
           if (existingUser) {
-            res.status(400).json({ message: "User already exists with email" });
+            res.status(409).json({ message: "User already exists with email" });
+            return;
           }
           const newUser = await prisma.users.create({
             data: {
@@ -105,7 +106,7 @@ export const UsersController = {
                 where: {
                   user_id: Number(req.params.id),
                 },
-                data: req.body,
+                data: validation.data,
               });
 
               res
@@ -118,7 +119,7 @@ export const UsersController = {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        res.status(400).json({message: "User with this email already exists"});
+        res.status(409).json({message: "User with this email already exists"});
       }
 
       console.log("error comes here", error);
