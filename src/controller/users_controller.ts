@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient, Prisma } from "../../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "../config/dotenv";
 import { UserSchema } from "../schema/user_schema";
@@ -87,7 +87,6 @@ export const UsersController = {
           user_id: Number(req.params.id),
         },
       });
-      console.log(req.body, existing);
       switch (true) {
         case !existing:
           res.status(404).json({ message: "User not found" });
@@ -97,7 +96,6 @@ export const UsersController = {
           const validation = updateSchema.safeParse(req.body);
           switch (true) {
             case !validation.success:
-              console.log(validation);
               res
                 .status(400)
                 .json({ message: validation.error.issues[0].message });
@@ -109,15 +107,21 @@ export const UsersController = {
                 },
                 data: req.body,
               });
-              console.log(updatedQuery);
-              
+
               res
                 .status(200)
                 .json({ message: "user data updated successfully" });
           }
       }
     } catch (error) {
-      console.log(error);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        res.status(400).json({message: "User with this email already exists"});
+      }
+
+      console.log("error comes here", error);
     }
   },
 };
