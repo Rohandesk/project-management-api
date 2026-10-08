@@ -11,7 +11,11 @@ const prisma = new PrismaClient({ adapter });
 export const UsersController = {
   getUsers: async (req: Request, res: Response): Promise<void> => {
     try {
-      const getAllUsers = await prisma.users.findMany();
+      const getAllUsers = await prisma.users.findMany({
+        include: {
+          projects: true
+        }
+      });
       res.status(200).json(getAllUsers);
     } catch (error) {
       console.log(error);
@@ -180,6 +184,19 @@ export const UsersController = {
       }
     } catch (error) {
       console.log("error comes here", error);
+    }
+  },
+
+  getDedicatedProject: async(req: Request, res: Response): Promise<void> => {
+    try {
+      const findProject = await prisma.users.findMany({
+        include: {
+          projects: true
+        }
+      })
+      res.status(200).json({message: "fetch", data: findProject})
+    } catch (error) {
+      console.log(error);
     }
   }
 };
