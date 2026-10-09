@@ -74,12 +74,10 @@ export const ProjectsController = {
               res.status(404).json({ message: "Project id not found" });
               break;
             default:
-              res
-                .status(200)
-                .json({
-                  message: "Project data fetch successfully",
-                  data: projectData,
-                });
+              res.status(200).json({
+                message: "Project data fetch successfully",
+                data: projectData,
+              });
               break;
           }
       }
@@ -127,12 +125,10 @@ export const ProjectsController = {
                     },
                     data: validation.data,
                   });
-                  res
-                    .status(200)
-                    .json({
-                      message: "Project data updated successfully",
-                      data: updateProjectQuery,
-                    });
+                  res.status(200).json({
+                    message: "Project data updated successfully",
+                    data: updateProjectQuery,
+                  });
                   break;
               }
           }
@@ -145,6 +141,43 @@ export const ProjectsController = {
         res.status(400).json({ message: "User does not exist" });
       }
       console.log(error);
+    }
+  },
+
+  deleteProject: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const convertStringtoNum = Number(req.params.id);
+      switch (true) {
+        case isNaN(convertStringtoNum):
+          res.status(400).json({ message: "invalid project id" });
+          break;
+        default:
+          const checkProjectExist = await prisma.projects.findUnique({
+            where: {
+              project_id: convertStringtoNum,
+            },
+          });
+          switch (true) {
+            case !checkProjectExist:
+              res.status(404).json({ message: "Project not found" });
+              break;
+            default:
+              const deleteProjectQuery = await prisma.projects.delete({
+                where: {
+                    project_id: convertStringtoNum
+                }
+              });
+              res.status(200).json({message: "Project deleted successfully"});
+          }
+      }
+    } catch (error) {
+      console.log(error);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2003"
+      ) {
+        res.status(409).json({ message: "Project cannot be deleted because tasks are assigned to it" });
+      }
     }
   },
 };
