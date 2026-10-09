@@ -34,6 +34,9 @@ export const UsersController = {
             where: {
               user_id: conversion,
             },
+            include: {
+              projects: true
+            }
           });
           switch (true) {
             case !getAllUsers:
