@@ -55,5 +55,35 @@ export const ProjectsController = {
     } catch (error) {
         console.log(error);
     }
+  },
+
+  getParticularProject: async (req: Request, res: Response): Promise<void> => {
+    try {
+        const convertStringtoNum = Number(req.params.id);
+        switch(true){
+            case isNaN(convertStringtoNum):
+                res.status(400).json({message: "Invalid id"});
+                break;
+            default:
+                const projectData = await prisma.projects.findUnique({
+                    where : {
+                        project_id: convertStringtoNum
+                    },
+                    include: {
+                        users: true
+                    }
+                })
+                switch(true){
+                    case projectData === null:
+                        res.status(404).json({message: "Project id not found"});
+                        break;
+                    default:
+                        res.status(200).json({message: "Project data fetch successfully", data: projectData});
+                        break;
+                }
+        }
+    } catch (error) {
+        console.log(error);
+    }
   }
 };
