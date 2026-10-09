@@ -85,5 +85,48 @@ export const ProjectsController = {
     } catch (error) {
         console.log(error);
     }
+  },
+
+  updateProjectData: async(req: Request, res:Response): Promise<void> => {
+    try {
+        const convertStringtoNum = Number(req.params.id);
+        switch(true){
+            case isNaN(convertStringtoNum):
+                res.status(400).json({message: "invalid project id"});
+                break;
+            default:
+                const checkProjectExist = await prisma.projects.findUnique({
+                    where: {
+                        project_id: convertStringtoNum
+                    }
+                });
+                console.log(checkProjectExist)
+                switch(true){
+                    case !checkProjectExist:
+                        res.status(404).json({message: "Project not found"});
+                        break;
+                    default:
+                        const updateSchema = ProjectsSchema.partial();
+                        const validation = updateSchema.safeParse(req.body);
+                        const  updateProjectQuery = await prisma.projects.update({
+                            where: {
+                                project_id: convertStringtoNum
+                            },
+                            data: validation.data
+                        });
+                        res.status(200).json({message: "Project data updated successfully", data: updateProjectQuery});
+                }
+        }
+    } catch (error) {
+        if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2003"
+      ) {
+        res
+          .status(400)
+          .json({ message: "User does not exist" });
+      }
+        console.log(error);
+    }
   }
 };
