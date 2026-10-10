@@ -48,4 +48,50 @@ export const TasksController = {
       }
     }
   },
+
+  getAllTasks: async(req: Request, res: Response): Promise<void> => {
+    try {
+        const getAllTasksQuery = await prisma.tasks.findMany({
+            include: {
+                projects: true
+            }
+        });
+        res.status(200).json({message: "data fetch successfully", data: getAllTasksQuery})
+    } catch (error) {
+        console.log(error);
+    }
+  },
+
+  getParticularTask: async(req: Request, res:Response): Promise<void> => {
+    try {
+        const convertStringToNum = Number(req.params.id);
+        switch(isNaN(convertStringToNum)){
+            case true:
+                res.status(400).json({message: "Invalid Task id"});
+                break;
+            default:
+                const findParticularTaskQuery = await prisma.tasks.findUnique({
+                    where: {
+                        task_id: Number(req.params.id)
+                    },
+                    include: {
+                        projects: {
+                            include: {
+                                users: true
+                            }
+                        }
+                    }
+                });
+                switch(true){
+                    case findParticularTaskQuery === null:
+                        res.status(404).json({message: "Task not found"});
+                        break;
+                    default:
+                        res.status(200).json({message: "data fetch successfully", data: findParticularTaskQuery})
+                }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+  }
 };
