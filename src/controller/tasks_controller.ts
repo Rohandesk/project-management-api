@@ -166,4 +166,31 @@ export const TasksController = {
       }
     }
   },
+
+  deleteTask: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const convertStringToNum = Number(req.params.id);
+      switch(Number.isNaN(convertStringToNum)){
+        case true:
+          res.status(400).json({message: "Invalid Task id"});
+          break;
+        default:
+          const DeleteTaskQuery = await prisma.tasks.delete({
+            where: {
+              task_id: convertStringToNum
+            }
+          })
+          res.status(200).json({message: "task deleted successfully"});
+          break;
+      }
+    } catch (error) {
+      console.log(error);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        res.status(404).json({ message: "Task does not exist" });
+      }
+    }
+  }
 };

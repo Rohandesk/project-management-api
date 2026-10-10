@@ -7,4 +7,5 @@ taskRouter.post("/", TasksController.createTasks);
 taskRouter.get("/", TasksController.getAllTasks);
 taskRouter.get("/:id", TasksController.getParticularTask);
 taskRouter.patch("/:id", TasksController.updateTask);
+taskRouter.delete("/:id", TasksController.deleteTask);
 export default taskRouter;
