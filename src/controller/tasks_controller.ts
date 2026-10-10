@@ -184,7 +184,7 @@ export const TasksController = {
     }
   },
 
-  deleteTask: async (req: Request, res: Response: next: NextFunction): Promise<void> => {
+  deleteTask: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const convertStringToNum = Number(req.params.id);
       switch(Number.isNaN(convertStringToNum)){
