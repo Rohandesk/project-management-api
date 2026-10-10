@@ -15,12 +15,9 @@ export const TasksController = {
       switch (validation.success) {
         case false:
           if (validation.error.issues[0].path == "status") {
-            res
-              .status(400)
-              .json({
-                message:
-                  "Status must be pending, in_progress, hold or completed",
-              });
+            res.status(400).json({
+              message: "Status must be pending, in_progress, hold or completed",
+            });
           } else {
             res
               .status(400)
@@ -35,7 +32,10 @@ export const TasksController = {
               project_id: validation.data.project_id,
             },
           });
-          res.status(201).json({ message: "successfully created tasks", data: createTaskQuery });
+          res.status(201).json({
+            message: "successfully created tasks",
+            data: createTaskQuery,
+          });
           break;
       }
     } catch (error) {
@@ -49,49 +49,121 @@ export const TasksController = {
     }
   },
 
-  getAllTasks: async(req: Request, res: Response): Promise<void> => {
+  getAllTasks: async (req: Request, res: Response): Promise<void> => {
     try {
-        const getAllTasksQuery = await prisma.tasks.findMany({
-            include: {
-                projects: true
-            }
-        });
-        res.status(200).json({message: "data fetch successfully", data: getAllTasksQuery})
+      const getAllTasksQuery = await prisma.tasks.findMany({
+        include: {
+          projects: true,
+        },
+      });
+      res
+        .status(200)
+        .json({ message: "data fetch successfully", data: getAllTasksQuery });
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
   },
 
-  getParticularTask: async(req: Request, res:Response): Promise<void> => {
+  getParticularTask: async (req: Request, res: Response): Promise<void> => {
     try {
-        const convertStringToNum = Number(req.params.id);
-        switch(isNaN(convertStringToNum)){
-            case true:
-                res.status(400).json({message: "Invalid Task id"});
-                break;
+      const convertStringToNum = Number(req.params.id);
+      switch (isNaN(convertStringToNum)) {
+        case true:
+          res.status(400).json({ message: "Invalid Task id" });
+          break;
+        default:
+          const findParticularTaskQuery = await prisma.tasks.findUnique({
+            where: {
+              task_id: convertStringToNum,
+            },
+            include: {
+              projects: {
+                include: {
+                  users: true,
+                },
+              },
+            },
+          });
+          switch (true) {
+            case findParticularTaskQuery === null:
+              res.status(404).json({ message: "Task not found" });
+              break;
             default:
-                const findParticularTaskQuery = await prisma.tasks.findUnique({
-                    where: {
-                        task_id: convertStringToNum
-                    },
-                    include: {
-                        projects: {
-                            include: {
-                                users: true
-                            }
-                        }
-                    }
-                });
-                switch(true){
-                    case findParticularTaskQuery === null:
-                        res.status(404).json({message: "Task not found"});
-                        break;
-                    default:
-                        res.status(200).json({message: "data fetch successfully", data: findParticularTaskQuery})
-                }
-        }
+              res.status(200).json({
+                message: "data fetch successfully",
+                data: findParticularTaskQuery,
+              });
+          }
+      }
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
-  }
+  },
+
+  updateTask: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const conversionNum = Number(req.params.id);
+      switch (Number.isNaN(conversionNum)) {
+        case true:
+          res.status(400).json({ message: "Invalid Task id" });
+          break;
+        default:
+          const updateTaskData = TasksSchema.partial().refine(
+            (data) => Object.keys(data).length > 0,
+            {
+              message: "At least one field is required to update",
+            },
+          );
+          const validation = updateTaskData.safeParse(req.body);
+          switch (validation.success) {
+            case false:
+              if (validation.error.issues[0].path == "status") {
+                res.status(400).json({
+                  message:
+                    "Status must be pending, in_progress, hold or completed",
+                });
+              } else{
+                res
+                  .status(400)
+                  .json({ message: validation.error.issues[0].message });
+              }
+              break;
+            default:
+              const UpdateTaskQuery = await prisma.tasks.update({
+                where: {
+                  task_id: conversionNum,
+                },
+                data: validation.data,
+              });
+              switch (true) {
+                case UpdateTaskQuery === null:
+                  res.status(404).json({ message: "Task not found" });
+                  break;
+                default:
+                  res
+                    .status(200)
+                    .json({
+                      message: "data updated successfully",
+                      data: UpdateTaskQuery,
+                    });
+                  break;
+              }
+              break;
+          }
+      }
+    } catch (error) {
+      console.log(error);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        res.status(404).json({ message: "Task does not exist" });
+      } else if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2003"
+      ) {
+        res.status(400).json({ message: "Project does not exist" });
+      }
+    }
+  },
 };
