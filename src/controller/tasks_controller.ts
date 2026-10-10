@@ -72,7 +72,7 @@ export const TasksController = {
             default:
                 const findParticularTaskQuery = await prisma.tasks.findUnique({
                     where: {
-                        task_id: Number(req.params.id)
+                        task_id: convertStringToNum
                     },
                     include: {
                         projects: {
