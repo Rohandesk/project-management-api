@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from "../../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "../config/dotenv";
 import { UserSchema } from "../schema/user_schema";
+import throwError from "../utils/throwError";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -9,7 +10,7 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 export const UsersController = {
-  getUsers: async (req: Request, res: Response): Promise<void> => {
+  getUsers: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const getAllUsers = await prisma.users.findMany({
         include: {
@@ -18,16 +19,18 @@ export const UsersController = {
       });
       res.status(200).json(getAllUsers);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
+      throwError(500 , "Internal Server Error", next);
     }
   },
 
-  getParticularUser: async (req: Request, res: Response): Promise<void> => {
+  getParticularUser: async (req: Request, res: Response, next:NextFunction): Promise<void> => {
     try {
       const conversion = Number(req.params.id);
       switch (true) {
         case isNaN(conversion):
-          res.status(400).json({ message: "Invalid id" });
+          // res.status(400).json({ message: "Invalid id" });
+          throwError(400 , "Invalid id", next);
           break;
         default:
           const getAllUsers = await prisma.users.findUnique({
@@ -40,7 +43,8 @@ export const UsersController = {
           });
           switch (true) {
             case !getAllUsers:
-              res.status(404).json({ message: "User not found" });
+              // res.status(404).json({ message: "User not found" });
+              throwError(404 , "User not found", next);
               break;
             default:
               res.status(200).json(getAllUsers);
@@ -48,19 +52,22 @@ export const UsersController = {
           }
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
+      throwError(500 , "Internal Server Error", next);
     }
   },
 
   createUser: async (
     req: Request<{}, {}, CreateUserInput>,
     res: Response,
+    next: NextFunction
   ): Promise<void> => {
     try {
       const validation = UserSchema.safeParse(req.body);
       switch (true) {
         case !validation.success:
-          res.status(400).json({ message: validation.error.issues[0].message });
+          // res.status(400).json({ message: validation.error.issues[0].message });
+          throwError(400 , validation.error.issues[0].message, next);
           break;
         default:
           const existingUser = await prisma.users.findUnique({
@@ -69,7 +76,8 @@ export const UsersController = {
             },
           });
           if (existingUser) {
-            res.status(409).json({ message: "User already exists with email" });
+            // res.status(409).json({ message: "User already exists with email" });
+            throwError(409 , "User already exists with email", next);
             return;
           }
           const newUser = await prisma.users.create({
@@ -84,11 +92,12 @@ export const UsersController = {
         // console.log(validation.data, newUser);
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
+      throwError(500 , "Internal Server Error", next);
     }
   },
 
-  updateUsers: async (req: Request, res: Response): Promise<void> => {
+  updateUsers: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const existing = await prisma.users.findUnique({
         where: {
@@ -97,16 +106,18 @@ export const UsersController = {
       });
       switch (true) {
         case !existing:
-          res.status(404).json({ message: "User not found" });
+          // res.status(404).json({ message: "User not found" });
+          throwError(404 , "User not found", next);
           break;
         default:
           const updateSchema = UserSchema.partial();
           const validation = updateSchema.safeParse(req.body);
           switch (true) {
             case !validation.success:
-              res
-                .status(400)
-                .json({ message: validation.error.issues[0].message });
+              // res
+              //   .status(400)
+              //   .json({ message: validation.error.issues[0].message });
+                throwError(400 , validation.error.issues[0].message, next);
               break;
             default:
               const updatedQuery = await prisma.users.update({
@@ -126,19 +137,21 @@ export const UsersController = {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        res.status(409).json({message: "User with this email already exists"});
+        // res.status(409).json({message: "User with this email already exists"});
+        throwError(409 , "User with this email already exists", next);
+      } else{
+        throwError(500 , "Internal Server Error", next);
       }
-
-      console.log("error comes here", error);
     }
   },
 
-  deleteUser: async (req: Request, res: Response): Promise <void> => {
+  deleteUser: async (req: Request, res: Response, next: NextFunction): Promise <void> => {
     try {
       const idConversion = Number(req.params.id);
       switch(true){
         case isNaN(idConversion):
-          res.status(400).json({message: "Invalid Id"});
+          // res.status(400).json({message: "Invalid Id"});
+          throwError(400 , "Invalid id", next);
           break;
         default:
           const checkIdExist = await prisma.users.findUnique({
@@ -148,7 +161,8 @@ export const UsersController = {
           })
           switch(true){
             case !checkIdExist:
-              res.status(404).json({message: "User not found"});
+              // res.status(404).json({message: "User not found"});
+              throwError(404 , "User not found", next);
               break;
             default:
               const deleteUser = await prisma.users.delete({
@@ -160,17 +174,19 @@ export const UsersController = {
           }
       }
     } catch (error) {
-      console.log("error comes here", error);
+      // console.log("error comes here", error);
+      throwError(500 , "Internal Server Error", next);
     }
   },
 
-  deleteBulkUsers: async (req: Request, res: Response) : Promise<void> => {
+  deleteBulkUsers: async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
     try {
       // filtering only ids here and removing invaid strings
       const cleanIds = req.body.user_ids.filter((id: string) => Number(id));
       switch(true){
         case cleanIds.length == 0:
-          res.status(400).json({message: "No valid user ids provided"});
+          // res.status(400).json({message: "No valid user ids provided"});
+          throwError(400 , "No valid user ids provided", next);
           break;
         default:
           // cleanIds contains proper ids which are later converted into numbers stored in array and passed for deletion
@@ -186,11 +202,12 @@ export const UsersController = {
           break;
       }
     } catch (error) {
-      console.log("error comes here", error);
+      // console.log("error comes here", error);
+       throwError(500 , "Internal Server Error", next);
     }
   },
 
-  getDedicatedProject: async(req: Request, res: Response): Promise<void> => {
+  getDedicatedProject: async(req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const findProject = await prisma.users.findMany({
         include: {
@@ -199,7 +216,8 @@ export const UsersController = {
       })
       res.status(200).json({message: "fetch", data: findProject})
     } catch (error) {
-      console.log(error);
+      // console.log(error);
+       throwError(500 , "Internal Server Error", next);
     }
   }
 };
