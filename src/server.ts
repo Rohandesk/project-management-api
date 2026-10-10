@@ -5,6 +5,7 @@ import projectRouter from "./routes/projects_routes";
 import taskRouter from "./routes/task_routes";
 import projectTaskRouter from "./routes/project_with_task_routes";
 import {ApiLogger} from "./middleware/ApiLogger";
+import {globalErrorHandler} from "./middleware/globalErrorHandler";
 
 const app = express();
 const port = process.env.PORT
@@ -18,6 +19,7 @@ app.use("/project-with-task", projectTaskRouter);
 app.use((req,res) => {
     res.status(404).json({message: "Route not found"});
 });
+app.use(globalErrorHandler)
 
 app.listen(port, () => {
     console.log(`Server is running on port ${process.env.PORT}`);
