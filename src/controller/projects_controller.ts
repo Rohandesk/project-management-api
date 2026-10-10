@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from "../../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "../config/dotenv";
 import { ProjectsSchema } from "../schema/projects_schema";
+import throwError from "../utils/throwError";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -9,12 +10,13 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 export const ProjectsController = {
-  createProjects: async (req: Request, res: Response): Promise<void> => {
+  createProjects: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const validation = ProjectsSchema.safeParse(req.body);
       switch (true) {
         case !validation.success:
-          res.status(400).json({ message: validation.error.issues[0].message });
+          // res.status(400).json({ message: validation.error.issues[0].message });
+          throwError(400 , validation.error.issues[0].message, next);
           break;
         default:
           const createProject = await prisma.projects.create({
@@ -34,9 +36,12 @@ export const ProjectsController = {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2003"
       ) {
-        res.status(400).json({ message: "User does not exist" });
+        // res.status(400).json({ message: "User does not exist" });
+        throwError(404 , "User does not exist", next);
+      } else{
+        throwError(500 , "Internal Server Error", next);
       }
-      console.log("error while creating projects", error);
+      // console.log("error while creating projects", error);
     }
   },
 
@@ -49,16 +54,18 @@ export const ProjectsController = {
       });
       res.status(200).json({ message: "fetch all data", data: getAllProjects });
     } catch (error) {
-      console.log(error);
+      // console.log(error);
+      throwError(500 , "Internal Server Error", next);
     }
   },
 
-  getParticularProject: async (req: Request, res: Response): Promise<void> => {
+  getParticularProject: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const convertStringtoNum = Number(req.params.id);
       switch (true) {
         case isNaN(convertStringtoNum):
-          res.status(400).json({ message: "Invalid id" });
+          // res.status(400).json({ message: "Invalid id" });
+          throwError(400 , "Invalid Id", next);
           break;
         default:
           const projectData = await prisma.projects.findUnique({
@@ -71,7 +78,8 @@ export const ProjectsController = {
           });
           switch (true) {
             case projectData === null:
-              res.status(404).json({ message: "Project id not found" });
+              // res.status(404).json({ message: "Project id not found" });
+              throwError(404 , "Project Id not found", next);
               break;
             default:
               res.status(200).json({
@@ -82,16 +90,18 @@ export const ProjectsController = {
           }
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
+       throwError(500 , "Internal Server Error", next);
     }
   },
 
-  updateProjectData: async (req: Request, res: Response): Promise<void> => {
+  updateProjectData: async (req: Request, res: Response, next:NextFunction): Promise<void> => {
     try {
       const convertStringtoNum = Number(req.params.id);
       switch (true) {
         case isNaN(convertStringtoNum):
-          res.status(400).json({ message: "invalid project id" });
+          // res.status(400).json({ message: "invalid project id" });
+          throwError(400 , "Invalid project id", next);
           break;
         default:
           const checkProjectExist = await prisma.projects.findUnique({
@@ -99,10 +109,10 @@ export const ProjectsController = {
               project_id: convertStringtoNum,
             },
           });
-          console.log(checkProjectExist);
           switch (true) {
             case !checkProjectExist:
-              res.status(404).json({ message: "Project not found" });
+              // res.status(404).json({ message: "Project not found" });
+              throwError(404 , "Project not found", next);
               break;
             default:
               const updateSchema = ProjectsSchema.partial().refine(
@@ -114,9 +124,10 @@ export const ProjectsController = {
               const validation = updateSchema.safeParse(req.body);
               switch (true) {
                 case !validation.success:
-                  res
-                    .status(400)
-                    .json({ message: validation.error.issues[0].message });
+                  // res
+                  //   .status(400)
+                  //   .json({ message: validation.error.issues[0].message });
+                  throwError(400 , validation.error.issues[0].message, next);
                   break;
                 default:
                   const updateProjectQuery = await prisma.projects.update({
@@ -138,18 +149,22 @@ export const ProjectsController = {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2003"
       ) {
-        res.status(400).json({ message: "User does not exist" });
+        // res.status(400).json({ message: "User does not exist" });
+        throwError(404 , "User does not exist", next);
+      } else{
+         throwError(500 , "Internal Server Error", next);
       }
-      console.log(error);
+      // console.log(error);
     }
   },
 
-  deleteProject: async (req: Request, res: Response): Promise<void> => {
+  deleteProject: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const convertStringtoNum = Number(req.params.id);
       switch (true) {
         case isNaN(convertStringtoNum):
-          res.status(400).json({ message: "invalid project id" });
+          // res.status(400).json({ message: "invalid project id" });
+          throwError(400 , "Invalid project id", next);
           break;
         default:
           const checkProjectExist = await prisma.projects.findUnique({
@@ -159,7 +174,8 @@ export const ProjectsController = {
           });
           switch (true) {
             case !checkProjectExist:
-              res.status(404).json({ message: "Project not found" });
+              // res.status(404).json({ message: "Project not found" });
+              throwError(404 , "Project id not found", next);
               break;
             default:
               const deleteProjectQuery = await prisma.projects.delete({
@@ -176,7 +192,10 @@ export const ProjectsController = {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2003"
       ) {
-        res.status(409).json({ message: "Project cannot be deleted because tasks are assigned to it" });
+        // res.status(409).json({ message: "Project cannot be deleted because tasks are assigned to it" });
+        throwError(409 , "Project cannot be deleted because tasks are assigned to it", next);
+      } else{
+        throwError(500 , "Internal Server Error", next);
       }
     }
   },
