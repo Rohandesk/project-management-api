@@ -45,7 +45,7 @@ export const ProjectsController = {
     }
   },
 
-  getAllProjects: async (req: Request, res: Response, ,next: NextFunction): Promise<void> => {
+  getAllProjects: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const getAllProjects = await prisma.projects.findMany({
         include: {
