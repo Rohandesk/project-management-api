@@ -13,6 +13,10 @@ app.use("/projects", projectRouter);
 app.use("/tasks", taskRouter);
 app.use("/project-with-task", projectTaskRouter);
 
+app.use((req,res) => {
+    res.status(404).json({message: "Route not found"});
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${process.env.PORT}`);
 })
