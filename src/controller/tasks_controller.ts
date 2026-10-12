@@ -55,7 +55,7 @@ export const TasksController = {
     }
   },
 
-  getAllTasks: async (req: Request, res: Response): Promise<void> => {
+  getAllTasks: async (req: Request, res: Response: next: NextFunction): Promise<void> => {
     try {
       const getAllTasksQuery = await prisma.tasks.findMany({
         include: {
