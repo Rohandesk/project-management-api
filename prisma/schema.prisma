@@ -13,6 +13,8 @@ model projects {
   user_id      Int?
   users        users?  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
   tasks        tasks[]
+
+  memberships  project_members[]
 }
 
 model tasks {
@@ -29,6 +31,16 @@ model users {
   user_email String     @unique @db.VarChar(50)
   user_phone String?    @db.VarChar(20)
   projects   projects[]
+  memberships  project_members[]
 
   @@index([user_email], map: "user_email_idx")
+}
+
+model project_members {
+  project_id Int    
+  user_id     Int    
+  projects   projects @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction)
+  users        users  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([project_id, user_id])
 }
