@@ -32,8 +32,17 @@ model users {
   user_phone String?    @db.VarChar(20)
   projects   projects[]
   memberships  project_members[]
+  profile user_profile?
 
   @@index([user_email], map: "user_email_idx")
+}
+
+model user_profile {
+  profile_id Int        @id @default(autoincrement())
+  user_id    Int        @unique
+  bio        String?
+
+  users      users  @relation(fields: [user_id], references: [user_id])
 }
 
 model project_members {
