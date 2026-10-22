@@ -74,6 +74,12 @@ export const ProjectsController = {
             },
             include: {
               users: true,
+              tasks: true,
+              memberships: {
+                include: {
+                  users: true
+                }
+              }
             },
           });
           switch (true) {
@@ -90,7 +96,7 @@ export const ProjectsController = {
           }
       }
     } catch (error) {
-      // console.log(error);
+      console.log(error);
        throwError(500 , "Internal Server Error", next);
     }
   },
