@@ -22,7 +22,7 @@ model tasks {
   task_name  String    @db.VarChar(50)
   status     String    @db.VarChar(20)
   project_id Int?
-  projects   projects? @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction)
+  projects   projects? @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model users {
