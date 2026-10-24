@@ -6,6 +6,7 @@ import taskRouter from "./routes/task_routes";
 import projectTaskRouter from "./routes/project_with_task_routes";
 import projectMembersRouter from "./routes/project_members_routes";
 import userProfileRouter from "./routes/userProfile_routes";
+import registerUserRouter from "./routes/register_user_routes";
 import {ApiLogger} from "./middleware/ApiLogger";
 import {globalErrorHandler} from "./middleware/globalErrorHandler";
 
@@ -19,6 +20,7 @@ app.use("/tasks", taskRouter);
 app.use("/project-with-task", projectTaskRouter);
 app.use("/user-with-project", projectMembersRouter);
 app.use("/user-profile", userProfileRouter);
+app.use("/register", registerUserRouter);
 
 app.use((req,res) => {
     res.status(404).json({message: "Route not found"});
