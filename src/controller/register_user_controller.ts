@@ -4,7 +4,8 @@ import dotenv from "../config/dotenv";
 import { registerUserSchema } from "../schema/register_user_schema";
 import throwError from "../utils/throwError";
 import { comparePassword, hashPassword } from "../utils/crypto";
-import {LoginUserSchema} from "../schema/login_schema";
+import { LoginUserSchema } from "../schema/login_schema";
+import {generateAccessToken} from "../utils/generateAccessToken";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -51,12 +52,10 @@ export const RegisterUserController = {
                 user_email: registerUserQuery.user_email,
                 user_phone: registerUserQuery.user_phone,
               };
-              res
-                .status(201)
-                .json({
-                  message: "User registered successfully",
-                  data: newRegisterData,
-                });
+              res.status(201).json({
+                message: "User registered successfully",
+                data: newRegisterData,
+              });
               break;
           }
           break;
@@ -97,9 +96,27 @@ export const RegisterUserController = {
                   throwError(401, "Invalid email or password", next);
                   break;
                 default:
+                  const payload = {
+                    user_id: findEneteredEmail.user_id,
+                    user_name: findEneteredEmail.user_name,
+                    user_email: findEneteredEmail.user_email,
+                  };
+                  const token = await generateAccessToken(
+                    payload
+                  );
+                  const dataToSend = {
+                    user_id: findEneteredEmail.user_id,
+                    user_name: findEneteredEmail.user_name,
+                    user_email: findEneteredEmail.user_email,
+                    user_phone: findEneteredEmail.user_phone,
+                    access_token: token
+                  }
                   res
                     .status(200)
-                    .json({ message: "User logged in successfully" });
+                    .json({
+                      message: "User logged in successfully",
+                      data: dataToSend
+                    });
                   break;
               }
               break;
