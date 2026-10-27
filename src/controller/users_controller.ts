@@ -3,6 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "../config/dotenv";
 import { UserSchema } from "../schema/user_schema";
 import throwError from "../utils/throwError";
+import {hashPassword} from "../utils/crypto";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -120,6 +121,12 @@ export const UsersController = {
                 throwError(400 , validation.error.issues[0].message, next);
               break;
             default:
+              if(validation.data?.password){
+                const {password, ...values} = validation.data;
+                const passwordHash = await hashPassword(password);
+                validation.data = { password_hash: passwordHash, ...values};
+              }
+              console.log(validation.data);
               const updatedQuery = await prisma.users.update({
                 where: {
                   user_id: Number(req.params.id),
