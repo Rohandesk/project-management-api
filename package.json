@@ -24,7 +24,11 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.6.4",
+    "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.3",
+    "npm": "^11.21.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
