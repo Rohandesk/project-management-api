@@ -6,6 +6,7 @@ import throwError from "../utils/throwError";
 import { comparePassword, hashPassword } from "../utils/crypto";
 import { LoginUserSchema } from "../schema/login_schema";
 import {generateAccessToken} from "../utils/generateAccessToken";
+import {verifyJwtToken} from "../middleware/verifyToken";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -127,4 +128,38 @@ export const RegisterUserController = {
       throwError(500, "Internal Server Error", next);
     }
   },
+
+  getLoggedInUserDetails: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const authHeader = req.headers.authorization;
+      const token = authHeader.split(" ")[1];
+      switch(true){
+        case !authHeader || !authHeader.startsWith('Bearer') || !token:
+          throwError(401, "Access denied. No token provided.", next);
+          break;
+        default:
+          const result = await verifyJwtToken(token);
+          switch(result.result){
+            case false:
+              throwError(401, "Unauthorized Access", next);
+              break;
+            default:
+              const tokenUserId = await prisma.users.findUnique({
+                where: {
+                  user_id: result.data.user_id
+                }
+              });
+              if(tokenUserId === null){
+                throwError(404, "User not found", next);
+              } else{
+                res.status(200).json({message: "Token verified", tokenUserId});
+              }
+              break;
+          }
+          break;
+      }
+    } catch (error) {
+      throwError(500, "Internal server error", next);
+    }
+  }
 };
