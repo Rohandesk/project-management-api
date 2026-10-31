@@ -161,5 +161,5 @@ export const RegisterUserController = {
     } catch (error) {
       throwError(500, "Internal server error", next);
     }
-  }
+  } 
 };
