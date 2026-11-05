@@ -5,8 +5,9 @@ import { registerUserSchema } from "../schema/register_user_schema";
 import throwError from "../utils/throwError";
 import { comparePassword, hashPassword } from "../utils/crypto";
 import { LoginUserSchema } from "../schema/login_schema";
-import {generateAccessToken} from "../utils/generateAccessToken";
-import {verifyJwtToken} from "../middleware/verifyToken";
+import { generateAccessToken } from "../utils/generateAccessToken";
+import { verifyJwtToken } from "../middleware/verifyToken";
+import { authHeader } from "../middleware/authHeader";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -131,35 +132,25 @@ export const RegisterUserController = {
 
   getLoggedInUserDetails: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const authHeader = req.headers.authorization;
-      const token = authHeader.split(" ")[1];
-      switch(true){
-        case !authHeader || !authHeader.startsWith('Bearer') || !token:
-          throwError(401, "Access denied. No token provided.", next);
-          break;
-        default:
-          const result = await verifyJwtToken(token);
-          switch(result.result){
-            case false:
-              throwError(401, "Unauthorized Access", next);
-              break;
-            default:
-              const tokenUserId = await prisma.users.findUnique({
-                where: {
-                  user_id: result.data.user_id
-                }
-              });
-              if(tokenUserId === null){
-                throwError(404, "User not found", next);
-              } else{
-                res.status(200).json({message: "Token verified", tokenUserId});
-              }
-              break;
-          }
-          break;
+      const tokenUserId = await prisma.users.findUnique({
+        where: {
+          user_id: req.user_id
+        }
+      });
+
+      if (tokenUserId === null) {
+        throwError(404, "User not found", next);
+      } else {
+        const newRegisterData = {
+          user_id: tokenUserId.user_id,
+          user_name: tokenUserId.user_name,
+          user_email: tokenUserId.user_email,
+          user_phone: tokenUserId.user_phone,
+        };
+        res.status(200).json({ message: "Token verified", newRegisterData });
       }
     } catch (error) {
       throwError(500, "Internal server error", next);
     }
-  } 
+  }
 };

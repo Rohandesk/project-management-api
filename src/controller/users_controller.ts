@@ -126,7 +126,6 @@ export const UsersController = {
                 const passwordHash = await hashPassword(password);
                 validation.data = { password_hash: passwordHash, ...values};
               }
-              console.log(validation.data);
               const updatedQuery = await prisma.users.update({
                 where: {
                   user_id: Number(req.params.id),
